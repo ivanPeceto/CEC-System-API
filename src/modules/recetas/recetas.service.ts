@@ -114,7 +114,12 @@ export class RecetasService {
 
   async findAll() {
     return await this.recetasRepository.find({
-      relations: ['insumos', 'insumos.insumo'],
+      relations: [
+        'insumos',
+        'insumos.insumo',
+        'subrecetas',
+        'subrecetas.receta',
+      ],
     });
   }
 
