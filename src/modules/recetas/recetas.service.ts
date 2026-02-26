@@ -168,6 +168,7 @@ export class RecetasService {
 
     let costo_total = parseFloat(receta.costo_total);
 
+
     if (updateRecetaDto.insumos && updateRecetaDto.insumos.length > 0) {
       const insumosIds = updateRecetaDto.insumos.map((item) => item.insumo);
       const insumosFromRepo = await this.insumosRepository.find({
@@ -181,19 +182,19 @@ export class RecetasService {
       }
 
       costo_total = 0;
-      receta.insumos.map((item) => {
+      receta.insumos = updateRecetaDto.insumos.map((item) => {
         const relacion = new RecetaInsumo();
 
         //Checks if the "receta insumo"  already exists
         const relacionExistente = receta.insumos.find(
-          (ri) => ri.insumo.id === item.insumo.id,
+          (ri) => ri.insumo.id === item.insumo,
         );
         //If it exists, uses the same ID so TypeORM doesn't create a new entity on the database
         if (relacionExistente) {
           relacion.id = relacionExistente.id;
         }
 
-        const insumo = insumosFromRepo.find((i) => i.id === item.insumo.id);
+        const insumo = insumosFromRepo.find((i) => i.id === item.insumo);
         if (insumo === undefined) {
           throw new BadRequestException(
             'Uno o más insumos proporcionados no existen en la base de datos.',
@@ -208,6 +209,11 @@ export class RecetasService {
         costo_total += precioInsumo * cantidadItem;
         return relacion;
       });
+    }
+
+    // Checks for "emptying all insumos" usecase
+    if (updateRecetaDto.insumos && updateRecetaDto.insumos.length === 0) {
+      receta.insumos.length = 0;
     }
 
     if (updateRecetaDto.subrecetas && updateRecetaDto.subrecetas.length > 0) {
@@ -225,19 +231,19 @@ export class RecetasService {
       }
 
       costo_total = 0;
-      receta.insumos.map((item) => {
+      receta.subrecetas = updateRecetaDto.subrecetas.map((item) => {
         const relacion = new RecetaSubreceta();
 
         //Checks if the "receta subreceta"  already exists
         const relacionExistente = receta.subrecetas.find(
-          (rs) => rs.subreceta.id === item.receta.id,
+          (rs) => rs.subreceta.id === item.subreceta,
         );
         //If it exists, uses the same ID so TypeORM doesn't create a new entity on the database
         if (relacionExistente) {
           relacion.id = relacionExistente.id;
         }
 
-        const subreceta = recetasFromRepo.find((i) => i.id === item.receta.id);
+        const subreceta = recetasFromRepo.find((i) => i.id === item.subreceta);
         if (subreceta === undefined) {
           throw new BadRequestException(
             'Una o más subrecetas proporcionadas no existen en la base de datos.',
@@ -252,6 +258,11 @@ export class RecetasService {
         costo_total += precioInsumo * cantidadItem;
         return relacion;
       });
+    }
+
+    //Checks for "emptying all subrecetas" usecase
+    if (updateRecetaDto.subrecetas && updateRecetaDto.subrecetas.length === 0) {
+      receta.subrecetas.length = 0;
     }
 
     receta.costo_total = costo_total.toString();
