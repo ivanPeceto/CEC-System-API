@@ -22,6 +22,11 @@ export class RecetasService {
   ) {}
 
   async create(createRecetaDto: CreateRecetaDto): Promise<Receta> {
+    if (!createRecetaDto.insumos && !createRecetaDto.subrecetas) {
+      throw new BadRequestException(
+        'Se debe proporcionar al menos un insumo o una subreceta.',
+      );
+    }
     const receta = this.recetasRepository.create({
       nombre: createRecetaDto.nombre,
       descripcion: createRecetaDto.descripcion,
@@ -156,6 +161,17 @@ export class RecetasService {
   }
 
   async update(id: string, updateRecetaDto: UpdateRecetaDto) {
+    // First checks for "insumos" and "subrecetas" array not being empy at the same time
+    if (
+      updateRecetaDto.insumos &&
+      updateRecetaDto.subrecetas &&
+      updateRecetaDto.insumos.length === 0 &&
+      updateRecetaDto.subrecetas.length === 0
+    ) {
+      throw new BadRequestException(
+        'Toda receta debe tener al menos un insumo o subreceta asociado.',
+      );
+    }
     const receta = await this.findOne(id);
 
     Object.assign(receta, {
