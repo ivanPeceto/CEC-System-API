@@ -118,7 +118,7 @@ export class RecetasService {
         'insumos',
         'insumos.insumo',
         'subrecetas',
-        'subrecetas.receta',
+        'subrecetas.subreceta',
       ],
     });
   }
@@ -130,7 +130,7 @@ export class RecetasService {
         'insumos',
         'insumos.insumo',
         'subrecetas',
-        'subrecetas.receta',
+        'subrecetas.subreceta',
       ],
     });
     if (!receta) {
@@ -146,7 +146,7 @@ export class RecetasService {
         'insumos',
         'insumos.insumo',
         'subrecetas',
-        'subrecetas.receta',
+        'subrecetas.subreceta',
       ],
     });
     if (!receta) {
@@ -166,111 +166,104 @@ export class RecetasService {
         updateRecetaDto.unidades_por_receta ?? receta.unidades_por_receta,
     });
 
-    let costo_total = parseFloat(receta.costo_total);
+    // Insumos array logic
+    if (updateRecetaDto.insumos) {
+      if (updateRecetaDto.insumos.length === 0) {
+        receta.insumos = [];
+      } else {
+        // Extract all the insumos id's from the dto to check if they exist in the db
+        const insumosIds = updateRecetaDto.insumos.map((item) => item.insumo);
+        const insumosFromRepo = await this.insumosRepository.find({
+          where: { id: In(insumosIds) },
+        });
 
-
-    if (updateRecetaDto.insumos && updateRecetaDto.insumos.length > 0) {
-      const insumosIds = updateRecetaDto.insumos.map((item) => item.insumo);
-      const insumosFromRepo = await this.insumosRepository.find({
-        where: { id: In(insumosIds) },
-      });
-
-      if (insumosIds.length === insumosFromRepo.length) {
-        throw new BadRequestException(
-          `${Math.abs(insumosIds.length - insumosFromRepo.length)} de los insumos proporcionados no existen`,
-        );
-      }
-
-      costo_total = 0;
-      receta.insumos = updateRecetaDto.insumos.map((item) => {
-        const relacion = new RecetaInsumo();
-
-        //Checks if the "receta insumo"  already exists
-        const relacionExistente = receta.insumos.find(
-          (ri) => ri.insumo.id === item.insumo,
-        );
-        //If it exists, uses the same ID so TypeORM doesn't create a new entity on the database
-        if (relacionExistente) {
-          relacion.id = relacionExistente.id;
-        }
-
-        const insumo = insumosFromRepo.find((i) => i.id === item.insumo);
-        if (insumo === undefined) {
+        if (insumosIds.length !== insumosFromRepo.length) {
           throw new BadRequestException(
-            'Uno o más insumos proporcionados no existen en la base de datos.',
+            `${Math.abs(insumosIds.length - insumosFromRepo.length)} de los insumos proporcionados no existen`,
           );
         }
-        relacion.insumo = insumo;
-        relacion.cantidad = item.cantidad;
 
-        const cantidadItem = parseFloat(item.cantidad);
-        const precioInsumo = parseFloat(insumo.costo_unidad_medida);
+        //Updates insumos array
+        receta.insumos = updateRecetaDto.insumos.map((i) => {
+          const relacion = new RecetaInsumo();
 
-        costo_total += precioInsumo * cantidadItem;
-        return relacion;
-      });
-    }
+          //Checks if the middle entity "Receta Insumos" already exists
+          const relacionExistente = receta.insumos.find(
+            (ri) => ri.insumo.id === i.insumo,
+          );
+          if (relacionExistente) {
+            relacion.id = relacionExistente.id;
+          }
 
-    // Checks for "emptying all insumos" usecase
-    if (updateRecetaDto.insumos && updateRecetaDto.insumos.length === 0) {
-      receta.insumos.length = 0;
-    }
+          const insumo = insumosFromRepo.find((ins) => ins.id === i.insumo);
+          if (insumo === undefined) {
+            throw new BadRequestException(
+              'Uno o más insumos proporcionados no existen en la base de datos.',
+            );
+          }
+          relacion.insumo = insumo;
+          relacion.cantidad = i.cantidad;
 
-    if (updateRecetaDto.subrecetas && updateRecetaDto.subrecetas.length > 0) {
-      const subrecetasIds = updateRecetaDto.subrecetas.map(
-        (item) => item.subreceta,
-      );
-      const recetasFromRepo = await this.recetasRepository.find({
-        where: { id: In(subrecetasIds) },
-      });
-
-      if (subrecetasIds.length === recetasFromRepo.length) {
-        throw new BadRequestException(
-          `${Math.abs(subrecetasIds.length - recetasFromRepo.length)} de las subrecetas proporcionadas no existen`,
-        );
+          return relacion;
+        });
       }
+    }
 
-      costo_total = 0;
-      receta.subrecetas = updateRecetaDto.subrecetas.map((item) => {
-        const relacion = new RecetaSubreceta();
-
-        //Checks if the "receta subreceta"  already exists
-        const relacionExistente = receta.subrecetas.find(
-          (rs) => rs.subreceta.id === item.subreceta,
+    // Subrecetas array logic
+    if (updateRecetaDto.subrecetas) {
+      if (updateRecetaDto.subrecetas.length === 0) {
+        receta.subrecetas = [];
+      } else {
+        // Extract all the subrecetas id's from the dto to check if they exist in the db
+        const subrecetasIds = updateRecetaDto.subrecetas.map(
+          (item) => item.subreceta,
         );
-        //If it exists, uses the same ID so TypeORM doesn't create a new entity on the database
-        if (relacionExistente) {
-          relacion.id = relacionExistente.id;
-        }
+        const recetasFromRepo = await this.recetasRepository.find({
+          where: { id: In(subrecetasIds) },
+        });
 
-        const subreceta = recetasFromRepo.find((i) => i.id === item.subreceta);
-        if (subreceta === undefined) {
+        if (subrecetasIds.length !== recetasFromRepo.length) {
           throw new BadRequestException(
-            'Una o más subrecetas proporcionadas no existen en la base de datos.',
+            `${Math.abs(subrecetasIds.length - recetasFromRepo.length)} de la recetas proporcionadas no existen`,
           );
         }
-        relacion.subreceta = subreceta;
-        relacion.cantidad = item.cantidad;
 
-        const cantidadItem = parseFloat(item.cantidad);
-        const precioInsumo = parseFloat(receta.costo_unidad);
+        //Updates subrecetas array
+        receta.subrecetas = updateRecetaDto.subrecetas.map((i) => {
+          const relacion = new RecetaSubreceta();
 
-        costo_total += precioInsumo * cantidadItem;
-        return relacion;
-      });
+          //Checks if the middle entity "Receta Subrecetas" already exists
+          const relacionExistente = receta.subrecetas.find(
+            (rs) => rs.subreceta.id === i.subreceta,
+          );
+          if (relacionExistente) {
+            relacion.id = relacionExistente.id;
+          }
+
+          const subreceta = recetasFromRepo.find(
+            (subr) => subr.id === i.subreceta,
+          );
+          if (subreceta === undefined) {
+            throw new BadRequestException(
+              'Una o más recetas proporcionados no existen en la base de datos.',
+            );
+          }
+          relacion.subreceta = subreceta;
+          relacion.cantidad = i.cantidad;
+
+          return relacion;
+        });
+      }
     }
 
-    //Checks for "emptying all subrecetas" usecase
-    if (updateRecetaDto.subrecetas && updateRecetaDto.subrecetas.length === 0) {
-      receta.subrecetas.length = 0;
-    }
-
-    receta.costo_total = costo_total.toString();
+    const costo_total = this.calculateTotalForReceta(receta);
+    receta.costo_total = costo_total.toFixed(2);
     const unidades = parseFloat(receta.unidades_por_receta);
     // Prevents division by zero
     receta.costo_unidad =
-      unidades > 0 ? (costo_total / unidades).toString() : '0';
-    return await this.recetasRepository.save(receta);
+      unidades > 0 ? (costo_total / unidades).toFixed(2) : '0';
+
+    return this.recetasRepository.save(receta);
   }
 
   async deleteCascade(id: string) {
@@ -290,7 +283,7 @@ export class RecetasService {
         'insumos',
         'insumos.insumo',
         'subrecetas',
-        'subrecetas.receta',
+        'subrecetas.subreceta',
       ],
       withDeleted: true,
     });
@@ -298,5 +291,25 @@ export class RecetasService {
       throw new NotFoundException(`Receta con id ${id} no encontrada.`);
     }
     await this.recetasRepository.recover(receta);
+  }
+
+  private calculateTotalForReceta(receta: Receta): number {
+    let costo_total = 0;
+    if (receta.subrecetas && receta.subrecetas.length > 0) {
+      receta.subrecetas.map((sr) => {
+        const costo_unidad = parseFloat(sr.subreceta.costo_unidad);
+        const unidades = parseFloat(sr.cantidad);
+        costo_total += costo_unidad * unidades;
+      });
+    }
+
+    if (receta.insumos && receta.insumos.length > 0) {
+      receta.insumos.map((i) => {
+        const costo_unidad = parseFloat(i.insumo.costo_unidad_medida);
+        const unidades = parseFloat(i.cantidad);
+        costo_total += costo_unidad * unidades;
+      });
+    }
+    return costo_total;
   }
 }
