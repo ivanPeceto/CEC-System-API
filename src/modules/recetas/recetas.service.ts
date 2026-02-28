@@ -294,11 +294,15 @@ export class RecetasService {
       }
     }
 
-    const costoAnterior = parseFloat(receta.costo_total);
+    const costoAnterior = receta.costo_total;
+    const costoUnidadAnterior = receta.costo_unidad;
     const updatedReceta = this.updatePriceFor(receta);
     const savedReceta = await this.recetasRepository.save(updatedReceta);
 
-    if (costoAnterior !== parseFloat(savedReceta.costo_total)) {
+    if (
+      costoAnterior !== savedReceta.costo_total ||
+      costoUnidadAnterior !== savedReceta.costo_unidad
+    ) {
       const recetaUpdatedEvent = new RecetaUpdatedEvent();
       recetaUpdatedEvent.receta_id = savedReceta.id;
       this.eventEmitter.emit('receta.price.updated', recetaUpdatedEvent);
