@@ -13,6 +13,7 @@ import { RecetasModule } from './modules/recetas/recetas.module';
 import { RecetaInsumoModule } from './modules/receta-insumo/receta-insumo.module';
 import { ProductosModule } from './modules/productos/productos.module';
 import { RecetaSubrecetaModule } from './modules/receta-subreceta/receta-subreceta.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { RecetaSubrecetaModule } from './modules/receta-subreceta/receta-subrece
       }),
       inject: [ConfigService],
     }),
+    EventEmitterModule.forRoot(),
     UsersModule,
     AuthModule,
     ClientesModule,

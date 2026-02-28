@@ -11,6 +11,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { RecetaInsumo } from '../receta-insumo/entities/receta-insumo.entity';
 import { Insumo } from '../insumos/entities/insumo.entity';
 import { RecetaSubreceta } from '../receta-subreceta/entities/receta-subreceta.entity';
+import { RecetaUpdatedEvent } from './events/receta-updated.event';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class RecetasService {
@@ -19,6 +21,7 @@ export class RecetasService {
     private readonly recetasRepository: Repository<Receta>,
     @InjectRepository(Insumo)
     private readonly insumosRepository: Repository<Insumo>,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   async create(createRecetaDto: CreateRecetaDto): Promise<Receta> {
@@ -160,6 +163,25 @@ export class RecetasService {
     return receta;
   }
 
+  async findRecetasWhoUseIt(idReceta: string) {
+    const recetas: Receta[] = await this.recetasRepository.find({
+      where: {
+        subrecetas: {
+          subreceta: {
+            id: idReceta,
+          },
+        },
+      },
+      relations: [
+        'insumos',
+        'insumos.insumo',
+        'subrecetas',
+        'subrecetas.subreceta',
+      ],
+    });
+    return recetas;
+  }
+
   async update(id: string, updateRecetaDto: UpdateRecetaDto) {
     // First checks for "insumos" and "subrecetas" array not being empy at the same time
     if (
@@ -272,14 +294,17 @@ export class RecetasService {
       }
     }
 
-    const costo_total = this.calculateTotalForReceta(receta);
-    receta.costo_total = costo_total.toFixed(2);
-    const unidades = parseFloat(receta.unidades_por_receta);
-    // Prevents division by zero
-    receta.costo_unidad =
-      unidades > 0 ? (costo_total / unidades).toFixed(2) : '0';
+    const costoAnterior = parseFloat(receta.costo_total);
+    const updatedReceta = this.updatePriceFor(receta);
+    const savedReceta = await this.recetasRepository.save(updatedReceta);
 
-    return this.recetasRepository.save(receta);
+    if (costoAnterior !== parseFloat(savedReceta.costo_total)) {
+      const recetaUpdatedEvent = new RecetaUpdatedEvent();
+      recetaUpdatedEvent.receta_id = savedReceta.id;
+      this.eventEmitter.emit('receta.price.updated', recetaUpdatedEvent);
+    }
+
+    return savedReceta;
   }
 
   async deleteCascade(id: string) {
@@ -312,7 +337,7 @@ export class RecetasService {
   private calculateTotalForReceta(receta: Receta): number {
     let costo_total = 0;
     if (receta.subrecetas && receta.subrecetas.length > 0) {
-      receta.subrecetas.map((sr) => {
+      receta.subrecetas.forEach((sr) => {
         const costo_unidad = parseFloat(sr.subreceta.costo_unidad);
         const unidades = parseFloat(sr.cantidad);
         costo_total += costo_unidad * unidades;
@@ -320,12 +345,22 @@ export class RecetasService {
     }
 
     if (receta.insumos && receta.insumos.length > 0) {
-      receta.insumos.map((i) => {
+      receta.insumos.forEach((i) => {
         const costo_unidad = parseFloat(i.insumo.costo_unidad_medida);
         const unidades = parseFloat(i.cantidad);
         costo_total += costo_unidad * unidades;
       });
     }
     return costo_total;
+  }
+
+  updatePriceFor(receta: Receta): Receta {
+    const costoTotal = this.calculateTotalForReceta(receta);
+    const unidades = parseFloat(receta.unidades_por_receta);
+
+    receta.costo_total = costoTotal.toFixed(2);
+    receta.costo_unidad =
+      unidades > 0 ? (costoTotal / unidades).toFixed(2) : '0';
+    return receta;
   }
 }
