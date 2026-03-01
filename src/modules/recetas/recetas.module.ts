@@ -14,5 +14,6 @@ import { RecetaUpdatedListener } from './listeners/receta-updated.listener';
   ],
   controllers: [RecetasController],
   providers: [RecetasService, RecetaUpdatedListener],
+  exports: [RecetasService],
 })
 export class RecetasModule {}
