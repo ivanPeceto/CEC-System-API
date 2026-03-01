@@ -6,12 +6,14 @@ import { Receta } from './entities/receta.entity';
 import { RecetaInsumo } from '../receta-insumo/entities/receta-insumo.entity';
 import { Insumo } from '../insumos/entities/insumo.entity';
 import { RecetaSubreceta } from '../receta-subreceta/entities/receta-subreceta.entity';
+import { RecetaUpdatedListener } from './listeners/receta-updated.listener';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Receta, RecetaInsumo, RecetaSubreceta, Insumo]),
   ],
   controllers: [RecetasController],
-  providers: [RecetasService],
+  providers: [RecetasService, RecetaUpdatedListener],
+  exports: [RecetasService],
 })
 export class RecetasModule {}
