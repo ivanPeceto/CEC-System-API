@@ -37,6 +37,12 @@ export class Producto {
   @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
   cantidad_receta: string;
 
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+  precio_estimado: string;
+
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+  margen_beneficio: string;
+
   @DeleteDateColumn()
   deletedAt: Date;
 }
