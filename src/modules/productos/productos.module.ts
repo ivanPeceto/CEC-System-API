@@ -5,9 +5,15 @@ import { Producto } from './entities/producto.entity';
 import { Receta } from '../recetas/entities/receta.entity';
 import { Categoria } from '../categorias/entities/categoria.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { RecetasModule } from '../recetas/recetas.module';
+import { CategoriasModule } from '../categorias/categorias.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Producto, Receta, Categoria])],
+  imports: [
+    TypeOrmModule.forFeature([Producto, Receta, Categoria]),
+    RecetasModule,
+    CategoriasModule,
+  ],
   controllers: [ProductosController],
   providers: [ProductosService],
 })
