@@ -46,7 +46,7 @@ export class CategoriasController {
   }
 
   @Delete(':id')
-  softDelete(@Param(':id') id: string) {
+  softDelete(@Param('id') id: string) {
     return this.categoriasService.softDelete(id);
   }
 
