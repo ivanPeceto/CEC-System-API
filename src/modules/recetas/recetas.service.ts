@@ -305,6 +305,7 @@ export class RecetasService {
     ) {
       const recetaUpdatedEvent = new RecetaUpdatedEvent();
       recetaUpdatedEvent.receta_id = savedReceta.id;
+      recetaUpdatedEvent.nuevo_costo_unidad = savedReceta.costo_unidad;
       this.eventEmitter.emit('receta.price.updated', recetaUpdatedEvent);
     }
 
