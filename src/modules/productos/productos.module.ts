@@ -7,6 +7,7 @@ import { Categoria } from '../categorias/entities/categoria.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { RecetasModule } from '../recetas/recetas.module';
 import { CategoriasModule } from '../categorias/categorias.module';
+import { RecetaPriceUpdatedListener } from './listeners/receta-price-updated.listener';
 
 @Module({
   imports: [
@@ -15,7 +16,7 @@ import { CategoriasModule } from '../categorias/categorias.module';
     CategoriasModule,
   ],
   controllers: [ProductosController],
-  providers: [ProductosService],
+  providers: [ProductosService, RecetaPriceUpdatedListener],
   exports: [ProductosService],
 })
 export class ProductosModule {}

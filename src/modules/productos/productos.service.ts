@@ -6,7 +6,6 @@ import { Producto } from './entities/producto.entity';
 import { Repository } from 'typeorm';
 import { RecetasService } from '../recetas/recetas.service';
 import { CategoriasService } from '../categorias/categorias.service';
-import { Receta } from '../recetas/entities/receta.entity';
 
 @Injectable()
 export class ProductosService {
@@ -38,14 +37,20 @@ export class ProductosService {
       );
       producto.receta = receta;
       producto.cantidad_receta = createProductoDto.cantidad_receta;
-      this.calculateAndUpdatePrecioEstimado(producto, producto.receta);
+      this.calculateAndUpdatePrecioEstimado(
+        producto,
+        producto.receta.costo_unidad,
+      );
     }
 
     return await this.productosRepository.save(producto);
   }
 
-  calculateAndUpdatePrecioEstimado(producto: Producto, receta: Receta) {
-    const costo_receta = parseFloat(receta.costo_unidad);
+  calculateAndUpdatePrecioEstimado(
+    producto: Producto,
+    costo_unidad_receta: string,
+  ) {
+    const costo_receta = parseFloat(costo_unidad_receta);
     const cantidad_receta = parseFloat(producto.cantidad_receta);
     const margen_porcentual = 1 + parseFloat(producto.margen_beneficio) / 100;
 
@@ -96,10 +101,10 @@ export class ProductosService {
     return productos;
   }
 
-  async findProductosByReceta(receta: Receta): Promise<Producto[]> {
+  async findProductosByReceta(recetaId: string): Promise<Producto[]> {
     const productos: Producto[] = await this.productosRepository.find({
       where: {
-        receta: receta,
+        receta: { id: recetaId },
       },
     });
     return productos;
@@ -126,7 +131,10 @@ export class ProductosService {
       producto.receta = receta;
       producto.cantidad_receta =
         updateProductoDto.cantidad_receta ?? producto.cantidad_receta;
-      this.calculateAndUpdatePrecioEstimado(producto, producto.receta);
+      this.calculateAndUpdatePrecioEstimado(
+        producto,
+        producto.receta.costo_unidad,
+      );
     }
 
     return await this.productosRepository.save(producto);
