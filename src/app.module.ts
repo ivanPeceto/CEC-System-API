@@ -14,6 +14,7 @@ import { RecetaInsumoModule } from './modules/receta-insumo/receta-insumo.module
 import { ProductosModule } from './modules/productos/productos.module';
 import { RecetaSubrecetaModule } from './modules/receta-subreceta/receta-subreceta.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { ReglasPrecioModule } from './modules/reglas_precio/reglas_precio.module';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
     RecetaInsumoModule,
     ProductosModule,
     RecetaSubrecetaModule,
+    ReglasPrecioModule,
   ],
   controllers: [AppController],
   providers: [AppService, ConfigModule],
