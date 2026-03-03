@@ -96,6 +96,15 @@ export class ProductosService {
     return productos;
   }
 
+  async findProductosByReceta(receta: Receta): Promise<Producto[]> {
+    const productos: Producto[] = await this.productosRepository.find({
+      where: {
+        receta: receta,
+      },
+    });
+    return productos;
+  }
+
   async update(id: string, updateProductoDto: UpdateProductoDto) {
     const producto = await this.findOne(id);
     Object.assign(producto, {
