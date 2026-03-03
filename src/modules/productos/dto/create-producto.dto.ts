@@ -33,4 +33,18 @@ export class CreateProductoDto {
   @IsOptional()
   @IsUUID('all', { message: 'El ID de la categoría debe ser un UUID válido' })
   receta?: string;
+
+  @IsOptional()
+  @IsString()
+  @Matches(/^\\d+\\.\\d{2}$/, {
+    message: 'El campo cantidad_receta es inválido.',
+  })
+  cantidad_receta?: string;
+
+  @IsNotEmpty({ message: 'El campo margen_beneficio es obligatorio.' })
+  @IsString()
+  @Matches(/^\\d+\\.\\d{2}$/, {
+    message: 'El margen_beneficio es inválido.',
+  })
+  margen_beneficio: string;
 }
