@@ -7,7 +7,7 @@ import { UpdatePedidoDto } from './dto/update-pedido.dto';
 export class PedidosController {
   constructor(private readonly pedidosService: PedidosService) {}
 
-  @Post()
+  /*@Post()
   create(@Body() createPedidoDto: CreatePedidoDto) {
     return this.pedidosService.create(createPedidoDto);
   }
@@ -30,5 +30,5 @@ export class PedidosController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.pedidosService.remove(+id);
-  }
+  }*/
 }

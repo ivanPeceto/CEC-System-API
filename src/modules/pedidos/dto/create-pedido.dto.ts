@@ -5,10 +5,9 @@ import {
   IsDateString,
   IsEnum,
   IsNotEmpty,
+  IsNumber,
   IsOptional,
-  IsString,
   IsUUID,
-  Matches,
   ValidateNested,
 } from 'class-validator';
 import { CreatePedidoProductoDto } from 'src/modules/pedido-producto/dto/create-pedido-producto.dto';
@@ -17,14 +16,12 @@ import { Estados } from 'src/types/pedidos.types';
 export class CreatePedidoDto {
   @IsDateString()
   @IsOptional()
+  @Type(() => Date)
   datetime?: Date;
 
-  @IsString()
-  @Matches(/^[1-9][0-9]*$/, {
-    message: 'El numero es inválido.',
-  })
+  @IsNumber()
   @IsOptional()
-  numero?: string;
+  numero?: number;
 
   @IsNotEmpty({ message: 'El campo cliente es obligatorio.' })
   @IsUUID('all', {
@@ -34,6 +31,7 @@ export class CreatePedidoDto {
 
   @IsDateString()
   @IsOptional()
+  @Type(() => Date)
   para_hora?: Date;
 
   @IsOptional()

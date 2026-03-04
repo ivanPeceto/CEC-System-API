@@ -41,10 +41,10 @@ export class ReglasPrecioService {
     return regla_precio;
   }
 
-  async findOneByProducto(productoId: string): Promise<ReglasPrecio> {
+  async findManyByProducto(productoId: string): Promise<ReglasPrecio[]> {
     //Validate id
     const producto = await this.productosService.findOne(productoId);
-    const regla_precio = await this.reglasRepo.findOne({
+    const regla_precio = await this.reglasRepo.find({
       where: { producto: producto },
     });
     if (!regla_precio) {

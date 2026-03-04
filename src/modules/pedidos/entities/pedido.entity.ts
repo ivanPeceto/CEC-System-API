@@ -1,23 +1,30 @@
 import { Cliente } from 'src/modules/clientes/entities/cliente.entity';
 import { PedidoProducto } from 'src/modules/pedido-producto/entities/pedido-producto.entity';
 import { Estados } from 'src/types/pedidos.types';
-import { Column, DeleteDateColumn, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  DeleteDateColumn,
+  Entity,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity('pedidos')
 export class Pedido {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'timestamp' })
+  @Column({ type: 'datetime' })
   datetime: Date;
 
   @Column({ type: 'integer', default: 0 })
-  numero?: string;
+  numero?: number;
 
   @ManyToOne(() => Cliente, (cliente) => cliente.pedidos)
-  cliente: string;
+  cliente: Cliente;
 
-  @Column({ type: 'time', nullable: true })
+  @Column({ type: 'datetime', nullable: true })
   para_hora?: Date;
 
   @Column({ type: 'enum', enum: Estados, default: Estados.PENDIENTE })
