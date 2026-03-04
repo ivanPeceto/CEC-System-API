@@ -15,6 +15,7 @@ import { ProductosModule } from './modules/productos/productos.module';
 import { RecetaSubrecetaModule } from './modules/receta-subreceta/receta-subreceta.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ReglasPrecioModule } from './modules/reglas_precio/reglas_precio.module';
+import { PedidosModule } from './modules/pedidos/pedidos.module';
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { ReglasPrecioModule } from './modules/reglas_precio/reglas_precio.module
     ProductosModule,
     RecetaSubrecetaModule,
     ReglasPrecioModule,
+    PedidosModule,
   ],
   controllers: [AppController],
   providers: [AppService, ConfigModule],
