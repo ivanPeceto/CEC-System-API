@@ -1,6 +1,7 @@
 import { Cliente } from 'src/modules/clientes/entities/cliente.entity';
+import { PedidoProducto } from 'src/modules/pedido-producto/entities/pedido-producto.entity';
 import { Estados } from 'src/types/pedidos.types';
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, DeleteDateColumn, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('pedidos')
 export class Pedido {
@@ -33,4 +34,10 @@ export class Pedido {
 
   @Column({ type: 'bool', default: false })
   es_venta_simple: boolean = false;
+
+  @OneToMany(() => PedidoProducto, (ped_prod) => ped_prod.pedido)
+  pedido_productos: PedidoProducto[];
+
+  @DeleteDateColumn()
+  deletedAt: Date;
 }
