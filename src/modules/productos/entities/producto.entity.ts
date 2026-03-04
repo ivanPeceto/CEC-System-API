@@ -1,10 +1,12 @@
 import { Categoria } from 'src/modules/categorias/entities/categoria.entity';
 import { Receta } from 'src/modules/recetas/entities/receta.entity';
+import { ReglasPrecio } from 'src/modules/reglas_precio/entities/reglas_precio.entity';
 import {
   Column,
   DeleteDateColumn,
   Entity,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
@@ -42,6 +44,12 @@ export class Producto {
 
   @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
   margen_beneficio: string;
+
+  @OneToMany(() => ReglasPrecio, (reglaPrecio) => reglaPrecio.producto, {
+    cascade: true,
+    eager: true,
+  })
+  reglas_precio: ReglasPrecio[];
 
   @DeleteDateColumn()
   deletedAt: Date;
