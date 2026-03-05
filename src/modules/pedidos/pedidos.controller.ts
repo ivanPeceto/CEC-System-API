@@ -7,16 +7,16 @@ import { UpdatePedidoDto } from './dto/update-pedido.dto';
 export class PedidosController {
   constructor(private readonly pedidosService: PedidosService) {}
 
-  /*@Post()
+  @Post()
   create(@Body() createPedidoDto: CreatePedidoDto) {
-    return this.pedidosService.create(createPedidoDto);
+    return this.pedidosService.createPedido(createPedidoDto);
   }
 
   @Get()
   findAll() {
     return this.pedidosService.findAll();
   }
-
+  /*
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.pedidosService.findOne(+id);

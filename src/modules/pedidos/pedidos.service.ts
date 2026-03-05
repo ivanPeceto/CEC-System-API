@@ -7,10 +7,12 @@ import { CreatePedidoDto } from './dto/create-pedido.dto';
 import { UpdatePedidoDto } from './dto/update-pedido.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Pedido } from './entities/pedido.entity';
-import { Between, Repository } from 'typeorm';
+import { Between, In, Repository } from 'typeorm';
 import { PedidoProducto } from '../pedido-producto/entities/pedido-producto.entity';
 import { ClientesService } from '../clientes/clientes.service';
 import { Estados } from 'src/types/pedidos.types';
+import { ReglasPrecioService } from '../reglas_precio/reglas_precio.service';
+import { ProductosService } from '../productos/productos.service';
 
 @Injectable()
 export class PedidosService {
@@ -20,6 +22,8 @@ export class PedidosService {
     @InjectRepository(PedidoProducto)
     private readonly pedidosProductosRepo: Repository<PedidoProducto>,
     private readonly clientesService: ClientesService,
+    private readonly reglasService: ReglasPrecioService,
+    private readonly productoService: ProductosService,
   ) {}
 
   async createPedido(createPedidoDto: CreatePedidoDto) {
@@ -32,7 +36,7 @@ export class PedidosService {
       );
     }
 
-    const pedidoDate: Date = createPedidoDto.datetime
+    const pedidoDate = createPedidoDto.datetime
       ? createPedidoDto.datetime
       : new Date();
 
@@ -50,12 +54,77 @@ export class PedidosService {
       pagado: createPedidoDto.pagado ?? false,
       avisado: createPedidoDto.avisado ?? false,
     });
-    
-    return 'This action adds a new pedido';
+
+    const productosIds = createPedidoDto.pedido_productos.map(
+      (item) => item.producto,
+    );
+    const productosFromRepo =
+      await this.productoService.findManyByIdList(productosIds);
+
+    if (productosFromRepo.length !== productosIds.length) {
+      throw new BadRequestException(
+        'Uno o más productos no existen en la base de datos.',
+      );
+    }
+
+    let total: number = 0;
+
+    // Creates middle entities and calculates prices
+    // Checks for existing price rules and calculates sub-price based on it
+    pedido.pedido_productos = await Promise.all(
+      createPedidoDto.pedido_productos.map(async (prod) => {
+        const relation = new PedidoProducto();
+        let subtotal = 0;
+
+        const producto = productosFromRepo.find((p) => p.id === prod.producto);
+        if (producto === undefined) {
+          throw new BadRequestException(
+            'Fallo al asignar productos. Uno o más productos no existen en la BDD',
+          );
+        }
+        const reglas_precio = await this.reglasService.findManyByProducto(
+          producto.id,
+        );
+
+        let restante_prod = parseFloat(prod.cantidad_producto);
+        if (reglas_precio.length > 0) {
+          for (const regla of reglas_precio) {
+            if (restante_prod === 0) continue;
+
+            const result: number = Math.trunc(
+              restante_prod / parseFloat(regla.cantidad_producto),
+            );
+            restante_prod =
+              restante_prod - result * parseFloat(regla.cantidad_producto);
+
+            subtotal += parseFloat(regla.precio_fijo) * result;
+          }
+          subtotal += restante_prod * parseFloat(producto.precio_unitario);
+        } else {
+          subtotal +=
+            parseFloat(prod.cantidad_producto) *
+            parseFloat(producto.precio_unitario);
+        }
+
+        relation.producto = producto;
+        relation.cantidad_producto = prod.cantidad_producto;
+        relation.aclaraciones = prod.aclaraciones;
+        relation.subtotal = subtotal.toFixed(2);
+
+        total += subtotal;
+        return relation;
+      }),
+    );
+    // End middle entities
+
+    pedido.total = total.toFixed(2);
+    return this.pedidosRepo.save(pedido);
   }
 
   async findAll() {
-    return await this.pedidosRepo.find();
+    return await this.pedidosRepo.find({
+      relations: ['pedido_productos', 'producto', 'cliente'],
+    });
   }
 
   async findOne(id: string) {
@@ -90,19 +159,21 @@ export class PedidosService {
   }
 
   async countPedidosByDate(date: Date) {
-    const startDate = new Date(date.setHours(0, 0, 0, 0));
-    const endDate = new Date(date.setHours(23, 59, 59, 999));
+    const startDate = new Date(date);
+    startDate.setHours(0, 0, 0, 0);
+    const endDate = new Date(date);
+    endDate.setHours(23, 59, 59, 999);
     const total_pedidos = await this.pedidosRepo.count({
       where: { datetime: Between(startDate, endDate) },
     });
     return total_pedidos;
   }
 
-  update(id: number, updatePedidoDto: UpdatePedidoDto) {
+  update(id: string, updatePedidoDto: UpdatePedidoDto) {
     return `This action updates a #${id} pedido`;
   }
 
-  remove(id: number) {
+  remove(id: string) {
     return `This action removes a #${id} pedido`;
   }
 }

@@ -7,12 +7,16 @@ import { PedidoProducto } from '../pedido-producto/entities/pedido-producto.enti
 import { Cliente } from '../clientes/entities/cliente.entity';
 import { PedidoProductoModule } from '../pedido-producto/pedido-producto.module';
 import { ClientesModule } from '../clientes/clientes.module';
+import { ReglasPrecioModule } from '../reglas_precio/reglas_precio.module';
+import { ProductosModule } from '../productos/productos.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Pedido, PedidoProducto, Cliente]),
     PedidoProductoModule,
     ClientesModule,
+    ReglasPrecioModule,
+    ProductosModule,
   ],
   controllers: [PedidosController],
   providers: [PedidosService],
