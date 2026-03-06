@@ -21,8 +21,8 @@ export class Pedido {
   @Column({ type: 'integer', default: 0 })
   numero?: number;
 
-  @ManyToOne(() => Cliente, (cliente) => cliente.pedidos)
-  cliente: Cliente;
+  @ManyToOne(() => Cliente, (cliente) => cliente.pedidos, { nullable: true })
+  cliente?: Cliente;
 
   @Column({ type: 'datetime', nullable: true })
   para_hora?: Date;
