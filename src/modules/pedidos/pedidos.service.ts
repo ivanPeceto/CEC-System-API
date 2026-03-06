@@ -74,6 +74,8 @@ export class PedidosService {
     pedido.pedido_productos = await Promise.all(
       createPedidoDto.pedido_productos.map(async (prod) => {
         const relation = new PedidoProducto();
+
+        relation.pedido = pedido;
         let subtotal = 0;
 
         const producto = productosFromRepo.find((p) => p.id === prod.producto);
@@ -123,7 +125,12 @@ export class PedidosService {
 
   async findAll() {
     return await this.pedidosRepo.find({
-      relations: ['pedido_productos', 'pedido_productos.producto', 'cliente'],
+      relations: {
+        pedido_productos: {
+          producto: true,
+        },
+        cliente: true,
+      },
     });
   }
 
@@ -219,14 +226,15 @@ export class PedidosService {
       // Checks for existing price rules and calculates sub-price based on it
       pedido.pedido_productos = await Promise.all(
         updatePedidoDto.pedido_productos.map(async (prod) => {
-          const relation = new PedidoProducto();
-          let subtotal = 0;
-
-          const existingRelation = pedido.pedido_productos.find(
+          let relation = pedido.pedido_productos.find(
             (pp) => pp.producto.id === prod.producto,
           );
-          if (existingRelation) {
-            relation.id = existingRelation.id;
+
+          let subtotal = 0;
+
+          if (!relation) {
+            relation = new PedidoProducto();
+            relation.pedido = pedido;
           }
 
           const producto = productosFromRepo.find(

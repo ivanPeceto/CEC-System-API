@@ -36,13 +36,16 @@ export class Pedido {
   @Column({ type: 'bool', default: false })
   avisado: boolean = false;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
   total: string;
 
   @Column({ type: 'bool', default: false })
   es_venta_simple: boolean = false;
 
-  @OneToMany(() => PedidoProducto, (ped_prod) => ped_prod.pedido)
+  @OneToMany(() => PedidoProducto, (ped_prod) => ped_prod.pedido, {
+    cascade: true,
+    orphanedRowAction: 'delete',
+  })
   pedido_productos: PedidoProducto[];
 
   @DeleteDateColumn()
