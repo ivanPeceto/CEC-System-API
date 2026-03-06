@@ -123,14 +123,14 @@ export class PedidosService {
 
   async findAll() {
     return await this.pedidosRepo.find({
-      relations: ['pedido_productos', 'producto', 'cliente'],
+      relations: ['pedido_productos', 'pedido_productos.producto', 'cliente'],
     });
   }
 
   async findOne(id: string) {
     const pedido = await this.pedidosRepo.findOne({
       where: { id },
-      relations: ['pedido_productos', 'producto', 'cliente'],
+      relations: ['pedido_productos', 'pedido_productos.producto', 'cliente'],
     });
     if (!pedido) {
       throw new NotFoundException(`Pedido con id ${id} no encontrado.`);
@@ -139,21 +139,25 @@ export class PedidosService {
   }
 
   async findManyByDate(date: Date) {
-    const startDate = new Date(date.setHours(0, 0, 0, 0));
-    const endDate = new Date(date.setHours(23, 59, 59, 999));
+    const startDate = new Date(date);
+    startDate.setHours(0, 0, 0, 0);
+    const endDate = new Date(date);
+    endDate.setHours(23, 59, 59, 999);
     const pedidos: Pedido[] = await this.pedidosRepo.find({
       where: { datetime: Between(startDate, endDate) },
-      relations: ['pedido_productos', 'producto', 'cliente'],
+      relations: ['pedido_productos', 'pedido_productos.producto', 'cliente'],
     });
     return pedidos;
   }
 
   async findOneByDateAndNumero(date: Date, number: number) {
-    const startDate = new Date(date.setHours(0, 0, 0, 0));
-    const endDate = new Date(date.setHours(23, 59, 59, 999));
+    const startDate = new Date(date);
+    startDate.setHours(0, 0, 0, 0);
+    const endDate = new Date(date);
+    endDate.setHours(23, 59, 59, 999);
     const pedido = await this.pedidosRepo.findOne({
       where: { datetime: Between(startDate, endDate), numero: number },
-      relations: ['pedido_productos', 'producto', 'cliente'],
+      relations: ['pedido_productos', 'pedido_productos.producto', 'cliente'],
     });
     return pedido;
   }
@@ -169,8 +173,108 @@ export class PedidosService {
     return total_pedidos;
   }
 
-  update(id: string, updatePedidoDto: UpdatePedidoDto) {
-    return `This action updates a #${id} pedido`;
+  async update(id: string, updatePedidoDto: UpdatePedidoDto) {
+    if (
+      updatePedidoDto.pedido_productos &&
+      updatePedidoDto.pedido_productos.length === 0
+    ) {
+      throw new BadRequestException(
+        'Todo pedido debe tener asociado al menos un producto.',
+      );
+    }
+    const pedido = await this.findOne(id);
+
+    Object.assign(pedido, {
+      datetime: updatePedidoDto.datetime ?? pedido.datetime,
+      numero: updatePedidoDto.numero ?? pedido.numero,
+      para_hora: updatePedidoDto.para_hora ?? pedido.para_hora,
+      estado: updatePedidoDto.estado ?? pedido.estado,
+      pagado: updatePedidoDto.pagado ?? pedido.pagado,
+      avisado: updatePedidoDto.pagado ?? pedido.avisado,
+    });
+
+    if (updatePedidoDto.cliente) {
+      const cliente = await this.clientesService.findOne(
+        updatePedidoDto.cliente,
+      );
+      pedido.cliente = cliente;
+    }
+
+    if (updatePedidoDto.pedido_productos) {
+      const productosIds = updatePedidoDto.pedido_productos.map(
+        (item) => item.producto,
+      );
+      const productosFromRepo =
+        await this.productoService.findManyByIdList(productosIds);
+
+      if (productosFromRepo.length !== productosIds.length) {
+        throw new BadRequestException(
+          'Uno o más productos no existen en la base de datos.',
+        );
+      }
+
+      let total: number = 0;
+      // Checks for existint middle entities
+      // If they don't exist, it creates middle entities and calculates prices
+      // Checks for existing price rules and calculates sub-price based on it
+      pedido.pedido_productos = await Promise.all(
+        updatePedidoDto.pedido_productos.map(async (prod) => {
+          const relation = new PedidoProducto();
+          let subtotal = 0;
+
+          const existingRelation = pedido.pedido_productos.find(
+            (pp) => pp.producto.id === prod.producto,
+          );
+          if (existingRelation) {
+            relation.id = existingRelation.id;
+          }
+
+          const producto = productosFromRepo.find(
+            (p) => p.id === prod.producto,
+          );
+          if (producto === undefined) {
+            throw new BadRequestException(
+              'Uno o más productos proporcionados no existen en la BDD.',
+            );
+          }
+
+          const reglas_precio = await this.reglasService.findManyByProducto(
+            producto.id,
+          );
+          let restante_prod = parseFloat(prod.cantidad_producto);
+          if (reglas_precio.length > 0) {
+            for (const regla of reglas_precio) {
+              if (restante_prod === 0) continue;
+
+              const result: number = Math.trunc(
+                restante_prod / parseFloat(regla.cantidad_producto),
+              );
+              restante_prod =
+                restante_prod - result * parseFloat(regla.cantidad_producto);
+
+              subtotal += parseFloat(regla.precio_fijo) * result;
+            }
+            subtotal += restante_prod * parseFloat(producto.precio_unitario);
+          } else {
+            subtotal +=
+              parseFloat(prod.cantidad_producto) *
+              parseFloat(producto.precio_unitario);
+          }
+
+          relation.producto = producto;
+          relation.cantidad_producto = prod.cantidad_producto;
+          relation.aclaraciones = prod.aclaraciones;
+          relation.subtotal = subtotal.toFixed(2);
+
+          total += subtotal;
+          return relation;
+        }),
+      );
+      // End middle entites
+
+      pedido.total = total.toFixed(2);
+    }
+    return this.pedidosRepo.save(pedido);
   }
 
   remove(id: string) {
