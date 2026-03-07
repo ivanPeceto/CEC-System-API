@@ -34,7 +34,7 @@ export class ReglasPrecioController {
 
   @Get('producto/:id')
   findOneByProducto(@Param('id') id: string) {
-    return this.reglasPrecioService.findOneByProducto(id);
+    return this.reglasPrecioService.findManyByProducto(id);
   }
 
   @Patch(':id')

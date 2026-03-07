@@ -41,18 +41,23 @@ export class ReglasPrecioService {
     return regla_precio;
   }
 
-  async findOneByProducto(productoId: string): Promise<ReglasPrecio> {
+  async findManyByProducto(productoId: string): Promise<ReglasPrecio[]> {
     //Validate id
-    const producto = await this.productosService.findOne(productoId);
-    const regla_precio = await this.reglasRepo.findOne({
+    /*const producto = await this.productosService.findOne(productoId);
+    const regla_precio = await this.reglasRepo.find({
       where: { producto: producto },
-    });
-    if (!regla_precio) {
+    });*/
+    const producto = await this.productosService.findOne(productoId);
+    const reglas_precio: ReglasPrecio[] = await this.reglasRepo.query(
+      'SELECT * FROM reglas_precio WHERE productoId = ? ORDER BY cantidad_producto DESC',
+      [producto.id],
+    );
+    if (reglas_precio.length === 0) {
       throw new NotFoundException(
         `Regla de precio con producto asociado de id ${productoId} no encontrada.`,
       );
     }
-    return regla_precio;
+    return reglas_precio;
   }
 
   async update(id: string, updateReglasPrecioDto: UpdateReglasPrecioDto) {

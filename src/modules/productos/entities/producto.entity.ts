@@ -1,4 +1,5 @@
 import { Categoria } from 'src/modules/categorias/entities/categoria.entity';
+import { PedidoProducto } from 'src/modules/pedido-producto/entities/pedido-producto.entity';
 import { Receta } from 'src/modules/recetas/entities/receta.entity';
 import { ReglasPrecio } from 'src/modules/reglas_precio/entities/reglas_precio.entity';
 import {
@@ -50,6 +51,9 @@ export class Producto {
     eager: true,
   })
   reglas_precio: ReglasPrecio[];
+
+  @OneToMany(() => PedidoProducto, (ped_prod) => ped_prod.producto)
+  pedidos_producto: PedidoProducto[];
 
   @DeleteDateColumn()
   deletedAt: Date;

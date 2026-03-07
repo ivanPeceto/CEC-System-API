@@ -3,7 +3,7 @@ import { CreateProductoDto } from './dto/create-producto.dto';
 import { UpdateProductoDto } from './dto/update-producto.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Producto } from './entities/producto.entity';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { RecetasService } from '../recetas/recetas.service';
 import { CategoriasService } from '../categorias/categorias.service';
 
@@ -110,6 +110,12 @@ export class ProductosService {
     return productos;
   }
 
+  async findManyByIdList(idList: string[]) {
+    const productos = await this.productosRepository.find({
+      where: { id: In(idList) },
+    });
+    return productos;
+  }
   async update(id: string, updateProductoDto: UpdateProductoDto) {
     const producto = await this.findOne(id);
     Object.assign(producto, {
