@@ -9,6 +9,7 @@ import { PedidoProductoModule } from '../pedido-producto/pedido-producto.module'
 import { ClientesModule } from '../clientes/clientes.module';
 import { ReglasPrecioModule } from '../reglas_precio/reglas_precio.module';
 import { ProductosModule } from '../productos/productos.module';
+import { VentaSimpleController } from './venta-simple.controller';
 
 @Module({
   imports: [
@@ -18,7 +19,7 @@ import { ProductosModule } from '../productos/productos.module';
     ReglasPrecioModule,
     ProductosModule,
   ],
-  controllers: [PedidosController],
+  controllers: [PedidosController, VentaSimpleController],
   providers: [PedidosService],
 })
 export class PedidosModule {}

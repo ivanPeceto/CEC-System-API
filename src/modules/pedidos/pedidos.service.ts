@@ -7,13 +7,12 @@ import { CreatePedidoDto } from './dto/create-pedido.dto';
 import { UpdatePedidoDto } from './dto/update-pedido.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Pedido } from './entities/pedido.entity';
-import { Between, IsNull, Repository } from 'typeorm';
+import { Between, IsNull, Repository, Not } from 'typeorm';
 import { PedidoProducto } from '../pedido-producto/entities/pedido-producto.entity';
 import { ClientesService } from '../clientes/clientes.service';
 import { Estados } from 'src/types/pedidos.types';
 import { ReglasPrecioService } from '../reglas_precio/reglas_precio.service';
 import { ProductosService } from '../productos/productos.service';
-import { Not } from 'typeorm/browser';
 import { CreateVentaSimpleDto } from './dto/create-venta-simple.dto';
 import { UpdateVentaSimpleDto } from './dto/update-venta-simple.dto';
 
@@ -308,19 +307,22 @@ export class PedidosService {
     return this.pedidosRepo.save(pedido);
   }
 
-  async deleteCascade(id: string) {
-    const pedido = await this.findOne(id);
+  async deleteCascade(id: string, es_venta_simple: boolean = false) {
+    const pedido = await this.findOne(id, es_venta_simple);
     await this.pedidosRepo.softRemove(pedido);
   }
 
-  async hardDeleteCascade(id: string) {
-    const pedido = await this.findOne(id);
+  async hardDeleteCascade(id: string, es_venta_simple: boolean = false) {
+    const pedido = await this.findOne(id, es_venta_simple);
     await this.pedidosRepo.remove(pedido);
   }
 
-  async restore(id: string) {
+  async restore(id: string, es_venta_simple: boolean = false) {
     const pedido = await this.pedidosRepo.findOne({
-      where: { id },
+      where: {
+        id: id,
+        es_venta_simple: es_venta_simple,
+      },
       relations: ['pedido_productos', 'pedido_productos.producto', 'cliente'],
       withDeleted: true,
     });
@@ -330,13 +332,13 @@ export class PedidosService {
     return await this.pedidosRepo.recover(pedido);
   }
 
-  async findSoftDeleted() {
+  async findSoftDeleted(es_venta_simple: boolean = false) {
     const deletedPedidos = await this.pedidosRepo.find({
       relations: ['pedido_productos', 'pedido_productos.producto', 'cliente'],
       withDeleted: true,
       where: {
         deletedAt: Not(IsNull()),
-        es_venta_simple: false,
+        es_venta_simple: es_venta_simple,
       },
     });
     return deletedPedidos;
