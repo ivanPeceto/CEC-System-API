@@ -6,14 +6,15 @@ import {
   HttpStatus,
   Post,
   Req,
+  Res,
   UseGuards,
 } from '@nestjs/common';
+import type { Response, Request } from 'express';
 import { AuthService } from './auth.service';
 import { SignInDto } from './dto/sign-in.dto';
-import { Public } from 'src/common/decorators/public/public.decorator';
 import { CreateUserDto } from '../users/dto/create-user.dto';
-import { AuthGuard } from './auth.guard';
-import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { Public } from 'src/common/decorators/public/public.decorator';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('auth')
 export class AuthController {
@@ -22,40 +23,62 @@ export class AuthController {
   @Public()
   @HttpCode(HttpStatus.OK)
   @Post('login')
-  signIn(@Body() signInDto: SignInDto) {
-    return this.authService.signIn(signInDto.email, signInDto.password);
+  async signIn(
+    @Body() signInDto: SignInDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const tokens = await this.authService.signIn(
+      signInDto.email,
+      signInDto.password,
+    );
+    this.authService.setCookies(res, tokens);
+    return { message: 'Autenticación exitosa' };
   }
 
   @Public()
   @HttpCode(HttpStatus.CREATED)
   @Post('signup')
-  signUp(@Body() createUserDto: CreateUserDto) {
-    return this.authService.signUp(createUserDto);
+  async signUp(
+    @Body() createUserDto: CreateUserDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const tokens = await this.authService.signUp(createUserDto);
+    this.authService.setCookies(res, tokens);
+    return { message: 'Usuario creado exitosamente' };
   }
 
-  @UseGuards(AuthGuard)
   @HttpCode(HttpStatus.OK)
   @Post('logout')
-  logout(@Req() req: any) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-    const userId: string = req.user['sub'];
-    return this.authService.logout(userId);
+  async logout(@Req() req: any, @Res({ passthrough: true }) res: Response) {
+    const userId = req.user.sub;
+    await this.authService.logout(userId);
+
+    res.clearCookie('access_token');
+    res.clearCookie('refresh_token', { path: '/auth/refresh' });
+    return { message: 'Sesión cerrada' };
   }
 
   @Public()
+  @UseGuards(AuthGuard('jwt-refresh'))
   @HttpCode(HttpStatus.OK)
   @Post('refresh')
-  async refreshTokens(@Body() refreshTokenDto: RefreshTokenDto) {
-    return this.authService.refreshTokensFromRequest(
-      refreshTokenDto.refreshToken,
-    );
+  async refreshTokens(
+    @Req() req: any,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const userId = req.user.sub;
+    const refreshToken = req.user.refreshToken;
+
+    const tokens = await this.authService.refreshTokens(userId, refreshToken);
+    this.authService.setCookies(res, tokens);
+    return { message: 'Tokens actualizados' };
   }
 
-  /** To test if a user is and admin. Devs only 
-  @Public()
-  @HttpCode(HttpStatus.OK)
-  @Get('admin')
-  async adminendpoint(@Body() signInDto: SignInDto) {
-    return this.authService.adminend(signInDto);
-  }*/
+  @Get('me')
+  async getProfile(@Req() req: any, @Res({ passthrough: true }) res: Response) {
+    const userId = req.user.sub;
+    if (typeof userId === 'string') {
+      return await this.authService.getProfile(userId);
+    }
+  }
 }
