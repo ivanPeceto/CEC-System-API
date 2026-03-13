@@ -1,7 +1,9 @@
+import { Cobro } from 'src/modules/cobros/entities/cobro.entity';
 import {
   Column,
   DeleteDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
@@ -21,6 +23,9 @@ export class MetodosPago {
 
   @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
   descuento?: string;
+
+  @OneToMany(() => Cobro, (cobro) => cobro.metodo)
+  cobros: Cobro[];
 
   @DeleteDateColumn()
   deletedAt: Date;
