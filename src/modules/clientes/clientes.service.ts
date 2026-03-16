@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Cliente } from './entities/cliente.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, IsNull, Not, Repository } from 'typeorm';
 import { CreateClienteDto } from './dto/create-clliente.dto';
 import { UpdateClienteDto } from './dto/update-cliente.dto';
 
@@ -19,6 +19,15 @@ export class ClientesService {
 
   async findAll(): Promise<Cliente[]> {
     return await this.clientesRepository.find();
+  }
+
+  async findSoftDeleted(): Promise<Cliente[]> {
+    return await this.clientesRepository.find({
+      withDeleted: true,
+      where: {
+        deletedAt: Not(IsNull()),
+      },
+    });
   }
 
   async findOne(id: string): Promise<Cliente> {
