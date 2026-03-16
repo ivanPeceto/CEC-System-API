@@ -62,4 +62,10 @@ export class ClientesController {
   findManyByName(@Param('name') nombre: string) {
     return this.clientesService.findManyByName(nombre);
   }
+
+  @Role(Roles.ADMIN)
+  @Get('/deleted')
+  findSoftDeleted() {
+    return this.clientesService.findSoftDeleted();
+  }
 }
