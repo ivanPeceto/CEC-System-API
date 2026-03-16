@@ -27,6 +27,12 @@ export class InsumosController {
     return this.insumosService.findAll();
   }
 
+  @Role(Roles.ADMIN)
+  @Get('deleted')
+  findAllSoftDeleted() {
+    return this.insumosService.findSoftDeleted();
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.insumosService.findOne(id);

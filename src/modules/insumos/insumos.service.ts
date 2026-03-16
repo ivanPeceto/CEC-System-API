@@ -104,4 +104,10 @@ export class InsumosService {
       throw new NotFoundException(`Insumo con id ${id} no encontrado.`);
     }
   }
+
+  async findSoftDeleted(): Promise<Insumo[]> {
+    return await this.insumosRepository.find({
+      withDeleted: true,
+    });
+  }
 }
