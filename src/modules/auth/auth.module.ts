@@ -4,9 +4,11 @@ import { AuthController } from './auth.controller';
 import { UsersModule } from '../users/users.module';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { AuthGuard } from './auth.guard';
+import { JwtAuthGuard } from './guards/auth.guard';
 import { APP_GUARD } from '@nestjs/core';
-import { RolesGuard } from './roles.guard';
+import { RolesGuard } from './guards/roles.guard';
+import { JwtStrategy } from './strategies/jwt.strategy';
+import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
 
 @Module({
   imports: [
@@ -23,9 +25,11 @@ import { RolesGuard } from './roles.guard';
   ],
   providers: [
     AuthService,
+    JwtStrategy,
+    JwtRefreshStrategy,
     {
       provide: APP_GUARD,
-      useClass: AuthGuard,
+      useClass: JwtAuthGuard,
     },
     {
       provide: APP_GUARD,

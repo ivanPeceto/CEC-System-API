@@ -1,4 +1,5 @@
 import { Cliente } from 'src/modules/clientes/entities/cliente.entity';
+import { Cobro } from 'src/modules/cobros/entities/cobro.entity';
 import { PedidoProducto } from 'src/modules/pedido-producto/entities/pedido-producto.entity';
 import { Estados } from 'src/types/pedidos.types';
 import {
@@ -47,6 +48,9 @@ export class Pedido {
     orphanedRowAction: 'delete',
   })
   pedido_productos: PedidoProducto[];
+
+  @OneToMany(() => Cobro, (cobro) => cobro.pedido)
+  cobros: Cobro[];
 
   @DeleteDateColumn()
   deletedAt: Date;
