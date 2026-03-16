@@ -12,7 +12,7 @@ import { CreateUserDto } from '../users/dto/create-user.dto';
 import { JwtPayload, Tokens } from 'src/types/auth.payloads';
 import { ConfigService } from '@nestjs/config';
 import { SignInDto } from './dto/sign-in.dto';
-import { Roles } from 'src/types/users.types';
+import type { Response } from 'express';
 
 @Injectable()
 export class AuthService {
@@ -22,7 +22,7 @@ export class AuthService {
     private configService: ConfigService,
   ) {}
 
-  async signIn(email: string, pass: string): Promise<{ access_token: string }> {
+  async signIn(email: string, pass: string): Promise<Tokens> {
     const user = await this.userService.findOneByEmail(email);
     const isMatch = await compare(pass, user.passwordHash);
 
@@ -46,7 +46,7 @@ export class AuthService {
     await this.userService.update(userId, { currentRefreshToken: null });
   }
 
-  async signUp(createUserDto: CreateUserDto): Promise<any> {
+  async signUp(createUserDto: CreateUserDto): Promise<Tokens> {
     const user = await this.userService
       .create(createUserDto)
       .catch((err: unknown) => {
@@ -87,6 +87,14 @@ export class AuthService {
     await this.updateRefreshTokenHash(user.id, tokens.refresh_token);
 
     return tokens;
+  }
+
+  async getProfile(id: string) {
+    const user = await this.userService.findOne(id);
+    if (!user) {
+      throw new ForbiddenException('Usuario inválido.');
+    }
+    return user;
   }
 
   async refreshTokens(userId: string, refreshToken: string): Promise<Tokens> {
@@ -147,29 +155,21 @@ export class AuthService {
     };
   }
 
-  async refreshTokensFromRequest(refreshToken: string): Promise<Tokens> {
-    let payload: JwtPayload;
+  setCookies(res: Response, tokens: Tokens) {
+    res.cookie('access_token', tokens.access_token, {
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax',
+      maxAge: 6 * 60 * 60 * 1000, // 6h
+      path: '/',
+    });
 
-    try {
-      payload = await this.jwtService.verifyAsync(refreshToken, {
-        secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
-      });
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (e) {
-      throw new ForbiddenException('Refresh token inválido o expirado');
-    }
-    const userId = payload.sub;
-    return this.refreshTokens(userId, refreshToken);
+    res.cookie('refresh_token', tokens.refresh_token, {
+      httpOnly: true,
+      secure: false,
+      path: '/auth/refresh',
+      sameSite: 'lax',
+      maxAge: 5 * 24 * 60 * 60 * 1000, // 5d
+    });
   }
-
-  /** To test if an user is admin. Devs only
-  async adminend(signInDto: SignInDto): Promise<any> {
-    const user = await this.userService.findOneByEmail(signInDto.email);
-    if (user.rol == Roles.ADMIN) {
-      return { message: 'Eres admin tio' };
-    } else {
-      throw new ForbiddenException('No sos admin capo');
-    }
-  }
-     */
 }
