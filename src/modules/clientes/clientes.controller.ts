@@ -53,6 +53,12 @@ export class ClientesController {
     return this.clientesService.findAll();
   }
 
+  @Role(Roles.ADMIN)
+  @Get('deleted')
+  findSoftDeleted() {
+    return this.clientesService.findSoftDeleted();
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.clientesService.findOne(id);
@@ -61,11 +67,5 @@ export class ClientesController {
   @Get('/nombre/:name')
   findManyByName(@Param('name') nombre: string) {
     return this.clientesService.findManyByName(nombre);
-  }
-
-  @Role(Roles.ADMIN)
-  @Get('/deleted')
-  findSoftDeleted() {
-    return this.clientesService.findSoftDeleted();
   }
 }
