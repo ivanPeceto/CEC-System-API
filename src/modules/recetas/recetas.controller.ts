@@ -27,6 +27,12 @@ export class RecetasController {
     return this.recetasService.findAll();
   }
 
+  @Role(Roles.ADMIN)
+  @Get('/deleted')
+  findAllSoftDeleted() {
+    return this.recetasService.findAllSoftDeleted();
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.recetasService.findOne(id);
