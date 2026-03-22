@@ -1,10 +1,4 @@
-import {
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-  IsUUID,
-  Matches,
-} from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
 
 export class CreateProductoDto {
   @IsNotEmpty({ message: 'El campo nombre es obligatorio.' })
@@ -21,9 +15,6 @@ export class CreateProductoDto {
 
   @IsNotEmpty({ message: 'El campo precio_unitario es obligatorio.' })
   @IsString()
-  @Matches(/^\\d+\\.\\d{2}$/, {
-    message: 'El precio unitario es inválido.',
-  })
   precio_unitario: string;
 
   @IsNotEmpty({ message: 'Es obligatorio definir la categoría' })
@@ -36,15 +27,9 @@ export class CreateProductoDto {
 
   @IsOptional()
   @IsString()
-  @Matches(/^\\d+\\.\\d{2}$/, {
-    message: 'El campo cantidad_receta es inválido.',
-  })
   cantidad_receta?: string;
 
   @IsNotEmpty({ message: 'El campo margen_beneficio es obligatorio.' })
   @IsString()
-  @Matches(/^\\d+\\.\\d{2}$/, {
-    message: 'El margen_beneficio es inválido.',
-  })
   margen_beneficio: string;
 }
