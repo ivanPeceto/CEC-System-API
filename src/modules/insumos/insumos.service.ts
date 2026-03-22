@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateInsumoDto } from './dto/create-insumo.dto';
 import { UpdateInsumoDto } from './dto/update-insumo.dto';
-import { In, Repository } from 'typeorm';
+import { In, IsNull, Not, Repository } from 'typeorm';
 import { Insumo } from './entities/insumo.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Receta } from '../recetas/entities/receta.entity';
@@ -108,6 +108,9 @@ export class InsumosService {
   async findSoftDeleted(): Promise<Insumo[]> {
     return await this.insumosRepository.find({
       withDeleted: true,
+      where: {
+        deletedAt: Not(IsNull()),
+      },
     });
   }
 }

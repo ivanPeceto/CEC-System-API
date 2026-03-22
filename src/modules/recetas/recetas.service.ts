@@ -372,6 +372,9 @@ export class RecetasService {
   async findAllSoftDeleted(): Promise<Receta[]> {
     return await this.recetasRepository.find({
       withDeleted: true,
+      where: {
+        deletedAt: Not(IsNull()),
+      },
       relations: [
         'insumos',
         'insumos.insumo',
