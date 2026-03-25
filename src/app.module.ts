@@ -17,6 +17,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ReglasPrecioModule } from './modules/reglas_precio/reglas_precio.module';
 import { PedidosModule } from './modules/pedidos/pedidos.module';
 import { PedidoProductoModule } from './modules/pedido-producto/pedido-producto.module';
+import { CobrosModule } from './modules/cobros/cobros.module';
 
 @Module({
   imports: [
@@ -53,6 +54,7 @@ import { PedidoProductoModule } from './modules/pedido-producto/pedido-producto.
     ReglasPrecioModule,
     PedidosModule,
     PedidoProductoModule,
+    CobrosModule,
   ],
   controllers: [AppController],
   providers: [AppService, ConfigModule],

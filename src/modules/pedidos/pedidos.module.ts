@@ -21,5 +21,6 @@ import { VentaSimpleController } from './venta-simple.controller';
   ],
   controllers: [PedidosController, VentaSimpleController],
   providers: [PedidosService],
+  exports: [PedidosService],
 })
 export class PedidosModule {}
