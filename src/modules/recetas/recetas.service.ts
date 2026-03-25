@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { CreateRecetaDto } from './dto/create-receta.dto';
 import { UpdateRecetaDto } from './dto/update-receta.dto';
-import { In, Repository } from 'typeorm';
+import { In, IsNull, Not, Repository } from 'typeorm';
 import { Receta } from './entities/receta.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RecetaInsumo } from '../receta-insumo/entities/receta-insumo.entity';
@@ -367,5 +367,20 @@ export class RecetasService {
     receta.costo_unidad =
       unidades > 0 ? (costoTotal / unidades).toFixed(2) : '0';
     return receta;
+  }
+
+  async findAllSoftDeleted(): Promise<Receta[]> {
+    return await this.recetasRepository.find({
+      withDeleted: true,
+      where: {
+        deletedAt: Not(IsNull()),
+      },
+      relations: [
+        'insumos',
+        'insumos.insumo',
+        'subrecetas',
+        'subrecetas.subreceta',
+      ],
+    });
   }
 }
