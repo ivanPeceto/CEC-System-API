@@ -3,7 +3,7 @@ import { CreateProductoDto } from './dto/create-producto.dto';
 import { UpdateProductoDto } from './dto/update-producto.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Producto } from './entities/producto.entity';
-import { In, Repository } from 'typeorm';
+import { In, IsNull, Not, Repository } from 'typeorm';
 import { RecetasService } from '../recetas/recetas.service';
 import { CategoriasService } from '../categorias/categorias.service';
 
@@ -166,5 +166,14 @@ export class ProductosService {
       throw new NotFoundException(`Producto con id ${id} no encontrado.`);
     }
     await this.productosRepository.recover(producto);
+  }
+
+  async findSoftDeleted(): Promise<Producto[]> {
+    return await this.productosRepository.find({
+      withDeleted: true,
+      where: {
+        deletedAt: Not(IsNull()), 
+      },
+    });
   }
 }

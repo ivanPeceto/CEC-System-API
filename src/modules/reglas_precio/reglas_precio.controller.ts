@@ -27,6 +27,12 @@ export class ReglasPrecioController {
     return this.reglasPrecioService.findAll();
   }
 
+  @Role(Roles.ADMIN)
+  @Get('deleted')
+  findAllSoftDel() {
+    return this.reglasPrecioService.findSoftDeleted();
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.reglasPrecioService.findOne(id);

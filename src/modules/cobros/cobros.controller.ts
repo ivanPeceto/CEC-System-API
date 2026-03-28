@@ -27,6 +27,12 @@ export class CobrosController {
     return this.cobrosService.findAll();
   }
 
+  @Role(Roles.ADMIN)
+  @Get('deleted')
+  findAllSoftDel() {
+    return this.cobrosService.findSoftDeleted();
+  }
+  
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.cobrosService.findOne(id);

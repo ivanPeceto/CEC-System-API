@@ -27,6 +27,12 @@ export class MetodosPagoController {
     return this.metodosPagoService.findAll();
   }
 
+  @Role(Roles.ADMIN)
+  @Get('deleted')
+  findAllSoftDel() {
+    return this.metodosPagoService.findSoftDeleted();
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.metodosPagoService.findOne(id);

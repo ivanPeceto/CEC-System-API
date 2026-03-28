@@ -3,7 +3,7 @@ import { CreateReglasPrecioDto } from './dto/create-reglas_precio.dto';
 import { UpdateReglasPrecioDto } from './dto/update-reglas_precio.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ReglasPrecio } from './entities/reglas_precio.entity';
-import { Repository } from 'typeorm';
+import { IsNull, Not, Repository } from 'typeorm';
 import { ProductosService } from '../productos/productos.service';
 
 @Injectable()
@@ -98,5 +98,14 @@ export class ReglasPrecioService {
       );
     }
     return await this.reglasRepo.recover(regla_precio);
+  }
+
+  async findSoftDeleted(): Promise<ReglasPrecio[]> {
+    return await this.reglasRepo.find({
+      withDeleted: true,
+      where: {
+        deletedAt: Not(IsNull()), 
+      },
+    });
   }
 }
