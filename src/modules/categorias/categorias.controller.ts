@@ -27,6 +27,12 @@ export class CategoriasController {
     return this.categoriasService.findAll();
   }
 
+  @Role(Roles.ADMIN)
+  @Get('deleted')
+  findAllSoftDel() {
+    return this.categoriasService.findSoftDeleted();
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.categoriasService.findOne(id);

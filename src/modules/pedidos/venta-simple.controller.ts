@@ -27,6 +27,12 @@ export class VentaSimpleController {
     return this.pedidoService.findAll(true);
   }
 
+  @Role(Roles.ADMIN)
+  @Get('deleted')
+  findAllDeleted() {
+    return this.pedidoService.findSoftDeleted(true);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.pedidoService.findOne(id, true);
@@ -35,12 +41,6 @@ export class VentaSimpleController {
   @Get('fecha/:date')
   findManyByDate(@Param('date') date: Date) {
     return this.pedidoService.findManyByDate(date, true);
-  }
-
-  @Role(Roles.ADMIN)
-  @Get('deleted')
-  findAllDeleted() {
-    return this.pedidoService.findSoftDeleted(true);
   }
 
   @Patch(':id')

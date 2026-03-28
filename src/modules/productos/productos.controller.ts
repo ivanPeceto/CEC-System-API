@@ -27,6 +27,12 @@ export class ProductosController {
     return this.productosService.findAll();
   }
 
+  @Role(Roles.ADMIN)
+  @Get('deleted')
+  findAllSoftDel() {
+    return this.productosService.findSoftDeleted();
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.productosService.findOne(id);

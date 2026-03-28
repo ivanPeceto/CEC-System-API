@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateMetodosPagoDto } from './dto/create-metodos_pago.dto';
 import { UpdateMetodosPagoDto } from './dto/update-metodos_pago.dto';
-import { Repository } from 'typeorm';
+import { IsNull, Not, Repository } from 'typeorm';
 import { MetodosPago } from './entities/metodos_pago.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 
@@ -54,5 +54,14 @@ export class MetodosPagoService {
     if (deletedMetodo.affected === 0) {
       throw new NotFoundException(`Metodo de pago con id ${id} no encontrado.`);
     }
+  }
+
+  async findSoftDeleted(): Promise<MetodosPago[]> {
+    return await this.metodosRepository.find({
+      withDeleted: true,
+      where: {
+        deletedAt: Not(IsNull()), 
+      },
+    });
   }
 }

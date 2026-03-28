@@ -27,6 +27,12 @@ export class PedidosController {
     return this.pedidosService.findAll();
   }
 
+  @Role(Roles.ADMIN)
+  @Get('deleted')
+  findAllDeleted() {
+    return this.pedidosService.findSoftDeleted();
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.pedidosService.findOne(id);
@@ -35,12 +41,6 @@ export class PedidosController {
   @Get('fecha/:date')
   findManyByDate(@Param('date') date: Date) {
     return this.pedidosService.findManyByDate(date);
-  }
-
-  @Role(Roles.ADMIN)
-  @Get('deleted')
-  findAllDeleted() {
-    return this.pedidosService.findSoftDeleted();
   }
 
   @Patch(':id')
