@@ -53,7 +53,7 @@ export class ReglasPrecioController {
 
   @Delete(':id')
   softDelete(@Param('id') id: string) {
-    return this.reglasPrecioService.delete(id);
+    return this.reglasPrecioService.softDelete(id);
   }
 
   @Role(Roles.ADMIN)
