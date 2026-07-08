@@ -26,12 +26,15 @@ export class ReglasPrecioService {
   }
 
   async findAll(): Promise<ReglasPrecio[]> {
-    return await this.reglasRepo.find();
+    return await this.reglasRepo.find({
+      relations: ['producto'],
+    });
   }
 
   async findOne(id: string): Promise<ReglasPrecio> {
     const regla_precio = await this.reglasRepo.findOne({
       where: { id },
+      relations: ['producto'],
     });
     if (!regla_precio) {
       throw new NotFoundException(
@@ -42,21 +45,13 @@ export class ReglasPrecioService {
   }
 
   async findManyByProducto(productoId: string): Promise<ReglasPrecio[]> {
-    //Validate id
-    /*const producto = await this.productosService.findOne(productoId);
-    const regla_precio = await this.reglasRepo.find({
-      where: { producto: producto },
-    });*/
     const producto = await this.productosService.findOne(productoId);
-    const reglas_precio: ReglasPrecio[] = await this.reglasRepo.query(
-      'SELECT * FROM reglas_precio WHERE productoId = ? ORDER BY cantidad_producto DESC',
-      [producto.id],
-    );
-    if (reglas_precio.length === 0) {
-      throw new NotFoundException(
-        `Regla de precio con producto asociado de id ${productoId} no encontrada.`,
-      );
-    }
+
+    const reglas_precio = await this.reglasRepo.find({
+      where: { producto: { id: producto.id } },
+      relations: ['producto'],
+      order: { cantidad_producto: 'DESC' },
+    });
     return reglas_precio;
   }
 
@@ -77,19 +72,30 @@ export class ReglasPrecioService {
   }
 
   async delete(id: string) {
-    const regla_precio = await this.findOne(id);
-    return await this.reglasRepo.softRemove(regla_precio);
+    const regla_precio = await this.reglasRepo.findOne({
+      where: { id },
+      withDeleted: true,
+    });
+
+    if (!regla_precio) {
+      throw new NotFoundException(
+        `Regla de precio con id ${id} no encontrada.`,
+      );
+    }
+
+    return await this.reglasRepo.remove(regla_precio); 
   }
 
   async softDelete(id: string) {
     const regla_precio = await this.findOne(id);
-    return await this.reglasRepo.remove(regla_precio);
+    return await this.reglasRepo.softRemove(regla_precio); 
   }
 
   async restore(id: string) {
     const regla_precio = await this.reglasRepo.findOne({
       where: { id },
       withDeleted: true,
+      relations: ['producto'],
     });
 
     if (!regla_precio) {
@@ -104,8 +110,9 @@ export class ReglasPrecioService {
     return await this.reglasRepo.find({
       withDeleted: true,
       where: {
-        deletedAt: Not(IsNull()), 
+        deletedAt: Not(IsNull()),
       },
+      relations: ['producto'],
     });
   }
 }
