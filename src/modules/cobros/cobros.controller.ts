@@ -65,7 +65,7 @@ export class CobrosController {
     return this.cobrosService.hardDelete(id);
   }
 
-  @Delete(':id')
+  @Delete('restore/:id')
   softRemove(@Param('id') id: string) {
     return this.cobrosService.delete(id);
   }
