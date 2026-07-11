@@ -219,7 +219,7 @@ export class PedidosService {
       para_hora: updatePedidoDto.para_hora ?? pedido.para_hora,
       estado: updatePedidoDto.estado ?? pedido.estado,
       pagado: updatePedidoDto.pagado ?? pedido.pagado,
-      avisado: updatePedidoDto.pagado ?? pedido.avisado,
+      avisado: updatePedidoDto.avisado ?? pedido.avisado,
     });
 
     if (updatePedidoDto.cliente) {
